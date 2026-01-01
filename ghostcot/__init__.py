@@ -15,17 +15,23 @@ Usage:
             **kwargs
         )
     
+    # Streaming
     for chunk in chat(messages=[{"role": "user", "content": "Question"}], stream=True):
         if chunk.choices[0].delta.reasoning_content:
             print(chunk.choices[0].delta.reasoning_content, end='')
         if chunk.choices[0].delta.content:
             print(chunk.choices[0].delta.content, end='')
+    
+    # Non-streaming
+    response = chat(messages=[{"role": "user", "content": "Question"}], stream=False)
+    print(response.choices[0].message.reasoning_content)  # Access reasoning
+    print(response.choices[0].message.content)  # Access final answer
 """
 
 from functools import wraps
 
 __version__ = "0.0.1"
-__all__ = ["enable_cot"]
+__all__ = ["enable_cot", "run_demo_cot_stream"]
 
 
 def generate_cot_instruction(start_tag, end_tag):
@@ -148,6 +154,62 @@ class CoTStreamWrapper:
                 yield CoTChunk(None, reasoning_content=None, content=remaining)
 
 
+def extract_cot_content(text, start_tag, end_tag):
+    """Extract reasoning and answer from response text"""
+    reasoning_content = ""
+    content = text
+    
+    if start_tag in text and end_tag in text:
+        start_pos = text.find(start_tag)
+        end_pos = text.find(end_tag)
+        
+        if start_pos != -1 and end_pos != -1 and end_pos > start_pos:
+            # Extract reasoning (between tags)
+            reasoning_content = text[start_pos + len(start_tag):end_pos].strip()
+            
+            # Extract answer (before start_tag + after end_tag)
+            before = text[:start_pos]
+            after = text[end_pos + len(end_tag):]
+            content = (before + after).strip()
+    
+    return reasoning_content, content
+
+
+class CoTResponseWrapper:
+    """Wrapper for non-streaming response that extracts reasoning"""
+    def __init__(self, original_response, start_tag, end_tag):
+        self.original = original_response
+        self.choices = []
+        
+        for choice in original_response.choices:
+            reasoning_content, cleaned_content = extract_cot_content(
+                choice.message.content,
+                start_tag,
+                end_tag
+            )
+            
+            # Create a new choice with reasoning and cleaned content
+            class CleanedChoice:
+                def __init__(self, original_choice, reasoning_content, cleaned_content):
+                    self.message = type('obj', (object,), {
+                        'content': cleaned_content,
+                        'reasoning_content': reasoning_content,
+                        'role': original_choice.message.role
+                    })()
+                    self.finish_reason = original_choice.finish_reason
+                    self.index = original_choice.index
+            
+            self.choices.append(CleanedChoice(choice, reasoning_content, cleaned_content))
+        
+        # Copy other attributes
+        self.id = original_response.id
+        self.created = original_response.created
+        self.model = original_response.model
+        self.object = original_response.object
+        if hasattr(original_response, 'usage'):
+            self.usage = original_response.usage
+
+
 def enable_cot(start_tag="<thinking>", end_tag="</thinking>", instruction=None):
     """
     Decorator to enable Chain-of-Thought reasoning for any LLM.
@@ -158,7 +220,8 @@ def enable_cot(start_tag="<thinking>", end_tag="</thinking>", instruction=None):
         instruction: Custom CoT instruction (default: auto-generated)
     
     Returns:
-        Decorated function that returns CoTStreamWrapper
+        Decorated function that returns CoTStreamWrapper for streaming
+        or CoTResponseWrapper for non-streaming (with reasoning_content accessible)
     
     Example:
         @enable_cot()
@@ -176,13 +239,18 @@ def enable_cot(start_tag="<thinking>", end_tag="</thinking>", instruction=None):
                 cot_inst = instruction or generate_cot_instruction(start_tag, end_tag)
                 kwargs['messages'] = inject_cot_instruction(kwargs['messages'], cot_inst)
             
-            original_stream = func(*args, **kwargs)
-            return CoTStreamWrapper(original_stream, start_tag, end_tag)
+            result = func(*args, **kwargs)
+            
+            # Check if streaming
+            is_streaming = kwargs.get('stream', False)
+            
+            if is_streaming:
+                return CoTStreamWrapper(result, start_tag, end_tag)
+            else:
+                return CoTResponseWrapper(result, start_tag, end_tag)
         
         return wrapper
     return decorator
-
-
 
 
 def run_demo_cot_stream(question, model_name="gpt-4o-mini", api_key=None, base_url=None):
@@ -196,8 +264,8 @@ def run_demo_cot_stream(question, model_name="gpt-4o-mini", api_key=None, base_u
         base_url: Optional base URL for custom endpoints (e.g., DeepSeek)
     
     Example:
-        >>> from ghostcot import demo_cot_stream
-        >>> demo_cot_stream("What is 2 + π?")
+        >>> from ghostcot import run_demo_cot_stream
+        >>> run_demo_cot_stream("What is 2 + π?")
     """
     import os
     from openai import OpenAI
