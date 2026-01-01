@@ -26,45 +26,96 @@ we can get the following output:
 
 ## How to Use
 
-Decorate your chat function with `@enable_cot()`:
+The only change you need to make is to decorate your chat function of OpenAI API with `@enable_cot()`. Then, the output contains both reasoning content and final answer, and you can use `chunk.choices[0].delta.reasoning_content` and `chunk.choices[0].delta.content` to distinguish between them. See the demo for more details.
+
+
+
 ```python
+import os
 from ghostcot import enable_cot
 from openai import OpenAI
 
-api_key = "your-api-key"
-client = OpenAI(api_key=api_key)
+model_name = "gpt-4o-mini"
 
-@enable_cot()
-def chat(messages, **kwargs):
-    return client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,
-        **kwargs
-    )
-
-messages=[{"role": "user", "content": "2 + π ≈ ?"}]
-
-# Stream the response
-thinking_started = False
-content_started = False
-
-for chunk in chat(messages=messages, stream=True):
-    # Print reasoning (thinking process)
-    if chunk.choices[0].delta.reasoning_content:
-        if not thinking_started:
-            print("----Think----")
-            thinking_started = True
-        print(chunk.choices[0].delta.reasoning_content, end='')
+def main():
+    # Get API key from environment
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("Please set OPENAI_API_KEY environment variable")
     
-    # Print final answer
-    if chunk.choices[0].delta.content:
-        if not content_started:
-            print("\n----Content----")
-            content_started = True
-        print(chunk.choices[0].delta.content, end='')
+    # For DeepSeek, use their base URL
+    client = OpenAI(
+        api_key=api_key,
+    )
+    
+    # Apply GhostCoT decorator
+    @enable_cot()
+    def chat(messages, **kwargs):
+        return client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            **kwargs
+        )
+    
+    # Test questions
+    questions = [
+        "2 + π ≈ ?",
+        # "Calculate (5 + x) * 2 where x = 10"
+    ]
+    
+    for i, question in enumerate(questions, 0):
+        print(f"\n{'='*60}")
+        print(f"Question {i}/{len(questions)}: {question}")
+        print('='*60)
+        print("\n👻 Ghost Thinking (Reasoning):")
+        print('-'*60)
+        
+        reasoning_done = False
+        
+        for chunk in chat(
+            messages=[{"role": "user", "content": question}],
+            stream=True
+        ):
+            # Print reasoning (thinking process)
+            if chunk.choices[0].delta.reasoning_content:
+                print(chunk.choices[0].delta.reasoning_content, end='', flush=True)
+            
+            # Print final answer
+            if chunk.choices[0].delta.content:
+                if not reasoning_done:
+                    print("\n" + '-'*60)
+                    print("✨ Final Answer:")
+                    print('-'*60)
+                    reasoning_done = True
+                print(chunk.choices[0].delta.content, end='', flush=True)
+        
+        print("\n")
 
-print("")
 
+if __name__ == "__main__":
+    main()
+```
+
+Original output:
+```
+============================================================
+Question 0/1: 2 + π ≈ ?
+============================================================
+
+👻 Ghost Thinking (Reasoning):
+------------------------------------------------------------
+
+To approximate the value of 2 + π, we first need to know the approximate value of π. The value of π is approximately 3.14. Therefore, we can add it to 2:
+
+2 + 3.14 = 5.14
+
+Thus, 2 + π is approximately 5.14.
+
+------------------------------------------------------------
+✨ Final Answer:
+------------------------------------------------------------
+
+2 + π ≈ 5.14
 ```
 
 

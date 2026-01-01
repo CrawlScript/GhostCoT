@@ -54,9 +54,11 @@ def main():
             messages=[{"role": "user", "content": question}],
             stream=True
         ):
+            # Print reasoning (thinking process)
             if chunk.choices[0].delta.reasoning_content:
                 print(chunk.choices[0].delta.reasoning_content, end='', flush=True)
             
+            # Print final answer
             if chunk.choices[0].delta.content:
                 if not reasoning_done:
                     print("\n" + '-'*60)
