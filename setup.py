@@ -4,7 +4,7 @@ description = "A decorator to enable Chain-of-Thought (CoT) reasoning for non-th
 
 setup(
     name="ghostcot",
-    version="0.0.2",
+    version="0.0.3",
     author="Jun Hu",
     author_email="hujunxianligong@gmail.com",
     description=description,

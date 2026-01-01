@@ -181,3 +181,68 @@ def enable_cot(start_tag="<thinking>", end_tag="</thinking>", instruction=None):
         
         return wrapper
     return decorator
+
+
+
+
+def run_demo_cot_stream(question, model_name="gpt-4o-mini", api_key=None, base_url=None):
+    """
+    Quick demo function to run Chain-of-Thought reasoning.
+    
+    Args:
+        question: The question to ask
+        model_name: Model name (default: "gpt-4o-mini")
+        api_key: API key (default: from OPENAI_API_KEY env var)
+        base_url: Optional base URL for custom endpoints (e.g., DeepSeek)
+    
+    Example:
+        >>> from ghostcot import demo_cot_stream
+        >>> demo_cot_stream("What is 2 + π?")
+    """
+    import os
+    from openai import OpenAI
+    
+    if api_key is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("Please provide api_key or set OPENAI_API_KEY environment variable")
+    
+    client = OpenAI(
+        api_key=api_key,
+        base_url=base_url
+    )
+    
+    @enable_cot()
+    def chat(messages, **kwargs):
+        return client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            **kwargs
+        )
+    
+    print(f"\n{'='*60}")
+    print(f"Question: {question}")
+    print('='*60)
+    print("\n👻 Ghost Thinking (Reasoning):")
+    print('-'*60)
+    
+    reasoning_done = False
+    
+    for chunk in chat(
+        messages=[{"role": "user", "content": question}],
+        stream=True
+    ):
+        # Print reasoning (thinking process)
+        if chunk.choices[0].delta.reasoning_content:
+            print(chunk.choices[0].delta.reasoning_content, end='', flush=True)
+        
+        # Print final answer
+        if chunk.choices[0].delta.content:
+            if not reasoning_done:
+                print("\n" + '-'*60)
+                print("✨ Final Answer:")
+                print('-'*60)
+                reasoning_done = True
+            print(chunk.choices[0].delta.content, end='', flush=True)
+    
+    print("\n")

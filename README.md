@@ -8,20 +8,22 @@ A decorator to enable Chain-of-Thought (CoT) reasoning for non-thinking LLMs (e.
 pip install ghostcot
 ```
 
-## Usage
+## Enable Non-Thinking LLMs to Think
 
 **Question:** 2 + π ≈ ?
 
-Using `ghostcot` + gpt-4o-mini (which is not a thinking model) by runing:
-```
-python demo/demo_ghostcot_stream.py
-```
-we can get the following output:
+Using `ghostcot`, you can enable non-thinking LLMs (e.g. gpt-4o-mini) to reason and get:
 
 > **Thinking:** `To estimate 2 + π, we need to know the approximate value of π. The value of π is approximately 3.14. Therefore: 2 + 3.14 = 5.14`
 
 **✨ Final Answer:** **5.14**
 
+You can run a demo with the following code:
+```python
+import ghostcot
+api_key = "your-api-key"
+ghostcot.run_demo_cot_stream("What is 2 + π?", model_name="gpt-4o-mini", api_key=api_key)
+```
 
 
 ## How to Use
