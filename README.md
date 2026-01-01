@@ -10,7 +10,7 @@ pip install ghostcot
 
 ## Usage
 
-**Question 0/1:** 2 + π ≈ ?
+**Question:** 2 + π ≈ ?
 
 Using `ghostcot` + gpt-4o-mini (which is not a thinking model) by runing:
 ```
