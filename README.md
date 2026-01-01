@@ -21,16 +21,17 @@ Using `ghostcot`, you can enable non-thinking LLMs (e.g. gpt-4o-mini) to reason 
 You can run a demo with the following code:
 ```python
 import ghostcot
-api_key = "your-api-key"
-ghostcot.run_demo_cot_stream("What is 2 + π?", model_name="gpt-4o-mini", api_key=api_key)
+api_key = "your-api-key" # OpenAI/DeepSeek/Other
+base_url = None # None for OpenAI, otherwise for other LLMs
+ghostcot.run_demo_cot_stream("What is 2 + π?", model_name="gpt-4o-mini", api_key=api_key, base_url=base_url)
 ```
 
 ## How to Use 
 
-The only change you need to make is to decorate your chat function of OpenAI API with `@enable_cot()`, and all the remaining code is the same as before.
+The only change you need to make is to decorate your chat function of OpenAI API with `@ghostcot.enable_cot()`, and all the remaining code is the same as before.
 ```python
 # Apply GhostCoT decorator
-@enable_cot()
+@ghostcot.enable_cot()
 def chat(messages, **kwargs):
     return client.chat.completions.create(
         model=model_name,

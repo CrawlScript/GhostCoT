@@ -10,7 +10,7 @@ Usage:
 """
 
 import os
-from ghostcot import enable_cot
+import ghostcot
 from openai import OpenAI
 
 model_name = "gpt-4o-mini"
@@ -27,7 +27,7 @@ def main():
     )
     
     # Apply GhostCoT decorator
-    @enable_cot()
+    @ghostcot.enable_cot()
     def chat(messages, **kwargs):
         return client.chat.completions.create(
             model=model_name,
