@@ -105,17 +105,13 @@ Question 0/1: 2 + π ≈ ?
 👻 Ghost Thinking (Reasoning):
 ------------------------------------------------------------
 
-To approximate the value of 2 + π, we first need to know the approximate value of π. The value of π is approximately 3.14. Therefore, we can add it to 2:
-
-2 + 3.14 = 5.14
-
-Thus, 2 + π is approximately 5.14.
+To estimate 2 + π, we need to know the approximate value of π. The value of π is approximately 3.14. Therefore: 2 + 3.14 = 5.14
 
 ------------------------------------------------------------
 ✨ Final Answer:
 ------------------------------------------------------------
 
-2 + π ≈ 5.14
+5.14
 ```
 
 
