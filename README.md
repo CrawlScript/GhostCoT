@@ -26,6 +26,8 @@ base_url = None # None for OpenAI, otherwise for other LLMs
 ghostcot.run_demo_cot_stream("What is 2 + π?", model_name="gpt-4o-mini", api_key=api_key, base_url=base_url)
 ```
 
+![Demo](demo/demo.gif)
+
 ## How to Use 
 
 The only change you need to make is to decorate your chat function of OpenAI API with `@ghostcot.enable_cot()`, and all the remaining code is the same as before.
