@@ -26,7 +26,7 @@ base_url = None # None for OpenAI, otherwise for other LLMs
 ghostcot.run_demo_cot_stream("What is 2 + π?", model_name="gpt-4o-mini", api_key=api_key, base_url=base_url)
 ```
 
-![Demo](demo/demo.gif)
+![Demo](demo/demo_image.gif)
 
 ## How to Use 
 
