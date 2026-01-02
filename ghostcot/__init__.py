@@ -120,6 +120,9 @@ class CoTStreamWrapper:
                     yield CoTChunk(chunk, reasoning_content=thinking_content, content=None)
                 
                 self.output_pos = end_pos + len(self.end_tag)
+                # Skip newlines after end_tag
+                while self.output_pos < len(self.buffer) and self.buffer[self.output_pos] == '\n':
+                    self.output_pos += 1
                 self.state = "ANSWER"
                 continue
             
@@ -210,13 +213,13 @@ class CoTResponseWrapper:
             self.usage = original_response.usage
 
 
-def enable_cot(start_tag="<thinking>", end_tag="</thinking>", instruction=None):
+def enable_cot(start_tag="<ghost-thinking>", end_tag="</ghost-thinking>", instruction=None):
     """
     Decorator to enable Chain-of-Thought reasoning for any LLM.
     
     Args:
-        start_tag: Tag marking the start of reasoning (default: "<thinking>")
-        end_tag: Tag marking the end of reasoning (default: "</thinking>")
+        start_tag: Tag marking the start of reasoning (default: "<ghost-thinking>")
+        end_tag: Tag marking the end of reasoning (default: "</ghost-thinking>")
         instruction: Custom CoT instruction (default: auto-generated)
     
     Returns:

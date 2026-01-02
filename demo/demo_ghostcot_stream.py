@@ -35,39 +35,38 @@ def main():
             **kwargs
         )
     
-    # Test questions
-    questions = [
-        "2 + π ≈ ?",
-        # "Calculate (5 + x) * 2 where x = 10"
-    ]
+
+
+    question = "What is 2 + π?"
+    # question = "2 + π ≈ ?"
+    # question = "Calculate (5 + x) * 2 where x = 10"
+
+    print(f"\n{'='*60}")
+    print(f"Question: {question}")
+    print('='*60)
+    print("\n👻 Ghost Thinking (Reasoning):")
+    print('-'*60)
     
-    for i, question in enumerate(questions, 0):
-        print(f"\n{'='*60}")
-        print(f"Question {i}/{len(questions)}: {question}")
-        print('='*60)
-        print("\n👻 Ghost Thinking (Reasoning):")
-        print('-'*60)
+    reasoning_done = False
+    
+    for chunk in chat(
+        messages=[{"role": "user", "content": question}],
+        stream=True
+    ):
+        # Print reasoning (thinking process)
+        if chunk.choices[0].delta.reasoning_content:
+            print(chunk.choices[0].delta.reasoning_content, end='', flush=True)
         
-        reasoning_done = False
-        
-        for chunk in chat(
-            messages=[{"role": "user", "content": question}],
-            stream=True
-        ):
-            # Print reasoning (thinking process)
-            if chunk.choices[0].delta.reasoning_content:
-                print(chunk.choices[0].delta.reasoning_content, end='', flush=True)
-            
-            # Print final answer
-            if chunk.choices[0].delta.content:
-                if not reasoning_done:
-                    print("\n" + '-'*60)
-                    print("✨ Final Answer:")
-                    print('-'*60)
-                    reasoning_done = True
-                print(chunk.choices[0].delta.content, end='', flush=True)
-        
-        print("\n")
+        # Print final answer
+        if chunk.choices[0].delta.content:
+            if not reasoning_done:
+                print("\n" + '-'*60)
+                print("✨ Final Answer:")
+                print('-'*60)
+                reasoning_done = True
+            print(chunk.choices[0].delta.content, end='', flush=True)
+    
+    print("\n")
 
 
 if __name__ == "__main__":
